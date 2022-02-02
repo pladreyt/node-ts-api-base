@@ -4,7 +4,8 @@ import {
   Post,
   Authorized,
   BadRequestError,
-  CurrentUser
+  CurrentUser,
+  Get
 } from 'routing-controllers';
 import { Service } from 'typedi';
 import { ErrorsMessages } from '../constants/errorMessages';
@@ -18,6 +19,14 @@ import { ITokenPayload } from 'src/interfaces/auth/auth.interface';
 @Service()
 export class TargetController {
   constructor(private readonly targetsService: TargetsService) { }
+
+  @Authorized()
+  @Get()
+  async listTargets(
+    @CurrentUser() currentUser: ITokenPayload
+  ): Promise<Target[]> {
+    return this.targetsService.listTargets( currentUser.data.userId );
+  }
 
   @Authorized()
   @Post()

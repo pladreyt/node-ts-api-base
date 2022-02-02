@@ -105,4 +105,44 @@ describe('TargetController', () => {
       expect(await targetRepo.count()).toBeGreaterThan(0);
     });
   });
+
+  describe('listTargets', () => {
+    beforeEach(async () => {
+      user = await factory(User)().create();
+      await factory(Target)().create({ userId: user.id });
+      token = await jwtService.createJWT(user);
+    });
+
+    it('returns http code 401 without authentication token', async () => {
+      const response = await request(app)
+        .get(`${API}/targets`);
+      expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
+      expect(response.body).toStrictEqual(
+        expect.objectContaining(new UnauthorizedError('GET /api/v1/targets'))
+      );
+    });
+
+    it('returns http code 401 with an invalid authentication token', async () => {
+      const invalidToken = faker.random.word();
+      const response = await request(app)
+        .get(`${API}/targets`)
+        .set({ Authorization: invalidToken });
+      expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
+      expect(response.body).toStrictEqual(
+        expect.objectContaining(new UnauthorizedError('GET /api/v1/targets'))
+      );
+    });
+
+    it('returns http code 200 and retrieves the target list for the user', async () => {
+      const response = await request(app)
+        .get(`${API}/targets`)
+        .set({ Authorization: token });
+      expect(response.status).toBe(HttpStatusCode.OK);
+      expect(response.body).toBeInstanceOf(Array);
+      expect(response.body).not.toEqual([]);
+      expect(response.body.every(
+        ( target: Target ) => target.userId === user.id )
+      ).toBe(true);
+    });
+  });
 });

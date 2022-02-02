@@ -3,6 +3,7 @@ import { getRepository } from 'typeorm';
 import { Target } from '@entities/target.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
 import { TargetErrorsMessages } from '@constants/errorMessages';
+import { DatabaseError } from '@exception/database.error';
 
 @Service()
 export class TargetsService {
@@ -28,6 +29,15 @@ export class TargetsService {
       return targetResult;
     } catch (error) {
       throw new TargetNotSavedException(`${error}`);
+    }
+  }
+
+  async listTargets( userId: number ): Promise<Target[]> {
+    try {
+      const targets = await this.targetRepository.find({ userId });
+      return targets;
+    } catch (error) {
+      throw new DatabaseError(`${error}`);
     }
   }
 }

@@ -8,6 +8,7 @@ import { User } from '@entities/user.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
 import * as faker from 'faker';
 import { UsersService } from '@services/users.service';
+import { DatabaseError } from '@exception/database.error';
 
 let targetsService: TargetsService;
 let usersService: UsersService;
@@ -99,6 +100,38 @@ describe('TargetsService', () => {
 
       await expect(targetsService.createTarget(target, user.id))
         .rejects.toThrowError(TargetNotSavedException);
+    });
+  });
+
+  describe('listTargets', () => {
+    beforeEach(async () => {
+      user = await factory(User)().create();
+      target = await factory(Target)().create({ userId: user.id });
+    });
+
+    it('should return a list of targets for the user', async () => {
+      jest.spyOn(targetRepository, 'find')
+        .mockResolvedValueOnce([target]);
+
+      const response = await targetsService.listTargets(user.id);
+      expect(response).toEqual([target]);
+    });
+
+    it('returns empty array if no targets found', async () => {
+      jest.spyOn(targetRepository, 'find')
+        .mockResolvedValueOnce([]);
+
+      const response = await targetsService.listTargets(user.id);
+      expect(response).toBeInstanceOf(Array);
+      expect(response).toEqual([]);
+    });
+
+    it('should return error when retrieving targets', async () => {
+      jest.spyOn(targetRepository, 'find')
+        .mockRejectedValueOnce(new DatabaseError('Test Error'));
+
+      await expect(targetsService.listTargets(user.id))
+        .rejects.toThrowError(DatabaseError);
     });
   });
 });
