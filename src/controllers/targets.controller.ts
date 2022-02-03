@@ -5,7 +5,9 @@ import {
   Authorized,
   BadRequestError,
   CurrentUser,
-  Get
+  Get,
+  Delete,
+  Param
 } from 'routing-controllers';
 import { Service } from 'typedi';
 import { ErrorsMessages } from '../constants/errorMessages';
@@ -14,6 +16,7 @@ import { TargetsService } from '@services/targets.service';
 import { CreateTargetDTO } from '@dto/createTargetDTO';
 import { Target } from '@entities/target.entity';
 import { ITokenPayload } from 'src/interfaces/auth/auth.interface';
+import { DeleteResult } from 'typeorm';
 
 @JsonController('/targets')
 @Service()
@@ -45,5 +48,14 @@ export class TargetController {
         error.detail ?? error.message ?? ErrorsMessages.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  @Authorized()
+  @Delete('/:id')
+  async delete(
+    @Param('id') id: number,
+    @CurrentUser() currentUser: ITokenPayload
+  ): Promise<DeleteResult> {
+    return this.targetsService.deleteTarget( id, currentUser.data.userId );
   }
 }
