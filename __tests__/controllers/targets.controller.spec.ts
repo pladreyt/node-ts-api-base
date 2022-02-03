@@ -6,7 +6,7 @@ import { User } from '@entities/user.entity';
 import { JWTService } from '@services/jwt.service';
 import { API } from '../utils';
 import { HttpStatusCode } from '@constants/httpStatusCode';
-import { getRepository } from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 import { ErrorsMessages, TargetErrorsMessages } from '@constants/errorMessages';
 import { CreateTargetDTO } from '@dto/createTargetDTO';
 import { Target } from '@entities/target.entity';
@@ -15,11 +15,14 @@ import * as faker from 'faker';
 
 let jwtService = Container.get(JWTService);
 let user: User;
+let target: Target;
 let token: string;
 let createTargetDTO: CreateTargetDTO;
+let targetRepo: Repository<Target>;
 
 describe('TargetController', () => {
   beforeAll(async () => {
+    targetRepo = getRepository<Target>(Target);
     jwtService = Container.get(JWTService);
     user = await factory(User)().create();
     token = await jwtService.createJWT(user);
@@ -28,6 +31,7 @@ describe('TargetController', () => {
 
   it('all dependencies should be defined', () => {
     expect(jwtService).toBeDefined();
+    expect(targetRepo).toBeDefined();
   });
 
   describe('createTarget', () => {
@@ -141,8 +145,51 @@ describe('TargetController', () => {
       expect(response.body).toBeInstanceOf(Array);
       expect(response.body).not.toEqual([]);
       expect(response.body.every(
-        ( target: Target ) => target.userId === user.id )
+        (target: Target) => target.userId === user.id)
       ).toBe(true);
+    });
+
+    describe('deleteTarget', () => {
+      beforeEach(async () => {
+        user = await factory(User)().create();
+        target = await factory(Target)().create({ userId: user.id });
+        token = await jwtService.createJWT(user);
+      });
+
+
+      it('returns http code 401 without authentication token', async () => {
+        const response = await request(app)
+          .delete(`${API}/targets/${target.id}`);
+        expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
+        expect(response.body).toStrictEqual(
+          expect.objectContaining(
+            new UnauthorizedError(`DELETE /api/v1/targets/${target.id}`)
+          )
+        );
+      });
+
+      it('returns http code 401 with an invalid authentication token', async () => {
+        const invalidToken = faker.random.word();
+        const response = await request(app)
+          .delete(`${API}/targets/${target.id}`)
+          .set({ Authorization: invalidToken });
+        expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
+        expect(response.body).toStrictEqual(
+          expect.objectContaining(
+            new UnauthorizedError(`DELETE /api/v1/targets/${target.id}`)
+          )
+        );
+      });
+
+      it('returns http code 200 and deletes the target', async () => {
+        const beforeCount = await targetRepo.count();
+
+        const response = await request(app)
+          .delete(`${API}/targets/${target.id}`)
+          .set({ Authorization: token });
+        expect(response.status).toBe(200);
+        expect(await targetRepo.count()).toBeLessThan(beforeCount);
+      });
     });
   });
 });
