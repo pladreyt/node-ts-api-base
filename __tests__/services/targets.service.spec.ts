@@ -115,6 +115,7 @@ describe('TargetsService', () => {
 
       const response = await targetsService.listTargets(user.id);
       expect(response).toEqual([target]);
+      expect(response[0]).toBeInstanceOf(Target);
     });
 
     it('returns empty array if no targets found', async () => {
