@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { getRepository } from 'typeorm';
+import { getRepository, UpdateResult } from 'typeorm';
 import { Target } from '@entities/target.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
 import { TargetErrorsMessages } from '@constants/errorMessages';
@@ -37,6 +37,17 @@ export class TargetsService {
       const targets = await this.targetRepository.find({ userId });
       return targets;
     } catch (error) {
+      throw new DatabaseError(`${error}`);
+    }
+  }
+
+  async deleteTarget(id: number, userId: number): Promise<UpdateResult> {
+    try {
+      const deleteResult = await this.targetRepository.softDelete(
+        { id, userId }
+      );
+      return deleteResult;
+    } catch ( error ) {
       throw new DatabaseError(`${error}`);
     }
   }

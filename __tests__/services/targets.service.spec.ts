@@ -9,6 +9,7 @@ import { TargetNotSavedException } from '@exception/targets/target-not-saved.exc
 import * as faker from 'faker';
 import { UsersService } from '@services/users.service';
 import { DatabaseError } from '@exception/database.error';
+import { mockUpdateResult } from '../utils/mocks';
 
 let targetsService: TargetsService;
 let usersService: UsersService;
@@ -109,6 +110,7 @@ describe('TargetsService', () => {
       target = await factory(Target)().create({ userId: user.id });
     });
 
+
     it('should return a list of targets for the user', async () => {
       jest.spyOn(targetRepository, 'find')
         .mockResolvedValueOnce([target]);
@@ -132,6 +134,24 @@ describe('TargetsService', () => {
         .mockRejectedValueOnce(new DatabaseError('Test Error'));
 
       await expect(targetsService.listTargets(user.id))
+        .rejects.toThrowError(DatabaseError);
+    });
+  });
+
+  describe('deleteTarget', () => {
+    it('should delete the target', async () => {
+      jest.spyOn(targetRepository, 'softDelete')
+        .mockResolvedValueOnce(mockUpdateResult);
+
+      const response = await targetsService.deleteTarget(target.id, user.id);
+      expect(response).toEqual(mockUpdateResult);
+    });
+
+    it('should return error when deleting the target', async () => {
+      jest.spyOn(targetRepository, 'softDelete')
+        .mockRejectedValueOnce(mockUpdateResult);
+
+      await expect(targetsService.deleteTarget(target.id, user.id))
         .rejects.toThrowError(DatabaseError);
     });
   });
