@@ -10,12 +10,14 @@ import { UserNotFoundError } from '@exception/users/user-not-found.error';
 import { HashExpiredError } from '@exception/users/hash-expired.error';
 import { HashInvalidError } from '@exception/users/hash-invalid.error';
 import { getRepository } from 'typeorm';
-import { ErrorsMessages } from '@constants/errorMessages';
+import { ErrorsMessages, UserErrorsMessages } from '@constants/errorMessages';
 import { UnauthorizedError } from '@exception/unauthorized.error';
+import * as faker from 'faker';
 
 let jwtService = Container.get(JWTService);
 let user: User;
 let token: string;
+let fakeToken: string;
 
 describe('UsersController', () => {
   beforeAll( () => {
@@ -30,6 +32,7 @@ describe('UsersController', () => {
     beforeEach(async () => {
       user = await factory(User)().create();
       token = await jwtService.createJWT(user);
+      fakeToken = faker.datatype.uuid();
     });
 
     it('returns http code 401 without authentication token', async () => {
@@ -43,7 +46,7 @@ describe('UsersController', () => {
     it('returns http code 401 with an invalid authentication token', async () => {
       const response = await request(app)
         .get(`${API}/users`)
-        .set({ Authorization: 'Inv3nT3d-T0k3N' });
+        .set({ Authorization: fakeToken });
       expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
       expect(response.body).toStrictEqual(
         expect.objectContaining(new UnauthorizedError('GET /api/v1/users'))
@@ -71,12 +74,14 @@ describe('UsersController', () => {
   });
 
   describe('verify', () => {
+    let fakeHash: string;
     beforeEach(async () => {
       user = await factory(User)().create();
+      fakeHash = faker.datatype.uuid();
     });
 
     it('returns http code 500 if expired hash', async () => {
-      user = await factory(User)().create({ hashExpiresAt: new Date() });
+      user = await factory(User)().create({ verifyHashExpiresAt: new Date() });
       const failingResponse = await request(app)
         .get(`${API}/users/verify/?key=${user.verifyHash}`);
       expect(failingResponse.status).toBe(HttpStatusCode.NOT_ACCEPTABLE);
@@ -86,7 +91,7 @@ describe('UsersController', () => {
     });
 
     it('returns http code 400 if invalid hash', async () => {
-      user.verifyHash = '11111111-2222-3333-4444-555555555555';
+      user.verifyHash = fakeHash;
       const failingResponse = await request(app)
         .get(`${API}/users/verify/?key=${user.verifyHash}`);
       expect(failingResponse.status).toBe(HttpStatusCode.BAD_REQUEST);
@@ -98,9 +103,9 @@ describe('UsersController', () => {
     it('returns http code 200 with valid params', async () => {
       const response = await request(app)
         .get(`${API}/users/verify/?key=${user.verifyHash}`);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatusCode.OK);
       expect(response.body.verified).toBe(true);
-      expect(response.body.hashExpiresAt).toBe(null);
+      expect(response.body.verifyHashExpiresAt).toBe(null);
       expect(response.body.verifyHash).toBe(null);
     });
   });
@@ -132,7 +137,7 @@ describe('UsersController', () => {
       const userFields = await factory(User)().make();
 
       const response = await request(app).post(`${API}/users`).send(userFields);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatusCode.OK);
 
       const userRepo = getRepository<User>(User);
       expect(await userRepo.count()).toBeGreaterThan(0);
@@ -148,7 +153,10 @@ describe('UsersController', () => {
       expect(response.body).toStrictEqual({
         description: ErrorsMessages.BODY_ERRORS,
         httpCode: HttpStatusCode.BAD_REQUEST,
-        errors: [ErrorsMessages.EMAIL_NOT_EMAIL],
+        errors: [
+          UserErrorsMessages.USER_EMAIL_NOT_EMPTY,
+          ErrorsMessages.EMAIL_NOT_EMAIL
+        ],
         name: ErrorsMessages.BAD_REQUEST_ERROR
       });
     });
@@ -163,7 +171,10 @@ describe('UsersController', () => {
       expect(response.body).toStrictEqual({
         description: ErrorsMessages.BODY_ERRORS,
         httpCode: HttpStatusCode.BAD_REQUEST,
-        errors: [ErrorsMessages.PASSWORD_ERROR],
+        errors: [
+          UserErrorsMessages.USER_PASSWORD_EMPTY,
+          UserErrorsMessages.USER_PASSWORD_ERROR
+        ],
         name: ErrorsMessages.BAD_REQUEST_ERROR
       });
     });
@@ -177,12 +188,12 @@ describe('UsersController', () => {
       const validResponse = await request(app)
         .post(`${API}/users`)
         .send(userFields);
-      expect(validResponse.status).toBe(200);
+      expect(validResponse.status).toBe(HttpStatusCode.OK);
 
       const failingResponse = await request(app)
         .post(`${API}/users`)
         .send(userFields);
-      expect(failingResponse.status).toBe(400);
+      expect(failingResponse.status).toBe(HttpStatusCode.BAD_REQUEST);
       expect(failingResponse.body).toStrictEqual({
         description: expect.stringContaining(userFields.email),
         httpCode: HttpStatusCode.BAD_REQUEST,
@@ -210,7 +221,7 @@ describe('UsersController', () => {
       user.gender = newUser.gender;
 
       const response = await request(app).put(`${API}/users/${id}`).send(user);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatusCode.OK);
 
       const updatedUser = await getRepository(User).findOne(id);
       expect(updatedUser?.firstName).toEqual(user.firstName);
@@ -232,7 +243,7 @@ describe('UsersController', () => {
       const beforeCount = await userRepo.count();
       const response = await request(app).delete(`${API}/users/${id}`);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatusCode.OK);
       expect(await userRepo.count()).toBeLessThan(beforeCount);
     });
   });

@@ -30,7 +30,7 @@ export class User extends Base {
 
   // eslint-disable-next-line quotes
   @Column({ nullable: true, type: 'timestamp', default: () => `NOW() +INTERVAL '1 day'` })
-  hashExpiresAt: Date | null;
+  verifyHashExpiresAt: Date | null;
 
   @Column({ unique: true, nullable: true })
   facebookID: string | null;

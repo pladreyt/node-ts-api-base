@@ -17,6 +17,7 @@ let jwtService = Container.get(JWTService);
 let user: User;
 let token: string;
 let createTargetDTO: CreateTargetDTO;
+const invalidToken: string = faker.random.word();
 
 describe('TargetController', () => {
   beforeAll(async () => {
@@ -45,7 +46,6 @@ describe('TargetController', () => {
     });
 
     it('returns http code 401 with an invalid authentication token', async () => {
-      const invalidToken = faker.random.word();
       const response = await request(app)
         .post(`${API}/targets`)
         .set({ Authorization: invalidToken });
@@ -123,7 +123,6 @@ describe('TargetController', () => {
     });
 
     it('returns http code 401 with an invalid authentication token', async () => {
-      const invalidToken = faker.random.word();
       const response = await request(app)
         .get(`${API}/targets`)
         .set({ Authorization: invalidToken });

@@ -10,6 +10,9 @@ import { UnauthorizedError } from '@exception/unauthorized.error';
 import { HttpStatusCode } from '@constants/httpStatusCode';
 import { TopicsService } from '@services/topics.service';
 import { TopicController } from '../../src/controllers/topic.controller';
+import * as faker from 'faker';
+
+let fakeToken: string;
 
 describe('TopicController', () => {
   describe('listTopics', () => {
@@ -30,6 +33,7 @@ describe('TopicController', () => {
       user = await factory(User)().create();
       topic = await factory(Topic)().create();
       token = await jwtService.createJWT(user);
+      fakeToken = faker.datatype.uuid();
     });
 
     it('all dependencies should be defined', () => {
@@ -43,6 +47,7 @@ describe('TopicController', () => {
         .mockResolvedValueOnce([topic]);
       const topics = await topicController.listTopics();
       expect(topics).toBeInstanceOf(Array);
+      expect(topics[0]).toBeInstanceOf(Topic);
       expect(topics).not.toEqual([]);
     });
 
@@ -65,7 +70,7 @@ describe('TopicController', () => {
     it('returns http code 401 with an invalid authentication token', async () => {
       const response = await request(app)
         .get(`${API}/topics`)
-        .set({ Authorization: 'Inv3nT3d-T0k3N' });
+        .set({ Authorization: fakeToken });
       expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
       expect(response.body).toStrictEqual(
         expect.objectContaining(new UnauthorizedError('GET /api/v1/topics'))

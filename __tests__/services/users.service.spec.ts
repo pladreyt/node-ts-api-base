@@ -66,7 +66,7 @@ describe('UsersService', () => {
     });
 
     it('should throw error if the hash is expired', async () => {
-      user.hashExpiresAt = faker.date.past();
+      user.verifyHashExpiresAt = faker.date.past();
 
       jest.spyOn(usersService, 'showUserByHash')
         .mockResolvedValueOnce(user);
@@ -84,7 +84,7 @@ describe('UsersService', () => {
       const userVerified = await usersService.verifyUser(user.verifyHash);
       expect(userVerified.verified).toBeTruthy();
       expect(userVerified.verifyHash).toBeNull();
-      expect(userVerified.hashExpiresAt).toBeNull();
+      expect(userVerified.verifyHashExpiresAt).toBeNull();
     });
   });
 

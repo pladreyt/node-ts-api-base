@@ -13,12 +13,15 @@ import { EmailService } from '@services/email.service';
 import { getMockReq, getMockRes } from '@jest-mock/express';
 import { genSaltSync, hashSync } from 'bcrypt';
 import { JWTService } from '@services/jwt.service';
+import * as faker from 'faker';
 
 let authController: AuthController;
 let sessionService: SessionService;
 let userFields: User;
 const req = getMockReq();
 const { res, mockClear } = getMockRes();
+let fakePassword: string;
+let fakeEmail: string;
 
 
 describe('AuthController', () => {
@@ -74,17 +77,17 @@ describe('AuthController', () => {
       const response = await request(app)
         .post(`${API}/auth/signup`)
         .send(userFields);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatusCode.OK);
     });
 
     it('returns http code 400 with invalid params', async () => {
       const response = await request(app)
         .post(`${API}/auth/signup`)
         .send({});
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(HttpStatusCode.BAD_REQUEST);
     });
 
-    it('returns http code 400 with 8 errors on the errors field', async () => {
+    it('returns http code 400 with 13 errors on the errors field', async () => {
       const response = await request(app)
         .post(`${API}/auth/signup`)
         .send({});
@@ -93,28 +96,36 @@ describe('AuthController', () => {
         errors: [
           UserErrorsMessages.USER_FIRST_NAME_NOT_EMPTY,
           UserErrorsMessages.USER_FIRST_NAME_STRING,
+          UserErrorsMessages.USER_FIRST_NAME_MAX_LENGTH,
           UserErrorsMessages.USER_LAST_NAME_NOT_EMPTY,
           UserErrorsMessages.USER_LAST_NAME_STRING,
+          UserErrorsMessages.USER_LAST_NAME_MAX_LENGTH,
           UserErrorsMessages.USER_GENDER_NOT_EMPTY,
           UserErrorsMessages.USER_GENDER_ENUM,
+          UserErrorsMessages.USER_EMAIL_NOT_EMPTY,
           ErrorsMessages.EMAIL_NOT_EMAIL,
-          ErrorsMessages.PASSWORD_ERROR
+          UserErrorsMessages.USER_EMAIL_MAX_LENGTH,
+          UserErrorsMessages.USER_PASSWORD_EMPTY,
+          UserErrorsMessages.USER_PASSWORD_ERROR
         ],
         httpCode: HttpStatusCode.BAD_REQUEST,
         name: ErrorsMessages.BAD_REQUEST_ERROR
       });
-      expect(response.body.errors).toHaveLength(8);
+      expect(response.body.errors).toHaveLength(13);
     });
     describe('signin', () => {
       let email: string;
       let password: string;
       let hashedPassword: string;
 
+
       beforeEach(async () => {
-        hashedPassword = hashSync('password123', genSaltSync());
+        fakePassword = faker.lorem.word(8);
+        fakeEmail = faker.internet.email();
+        hashedPassword = hashSync(fakePassword, genSaltSync());
         const user = await factory(User)().create({ password: hashedPassword });
         email = user.email;
-        password = 'password123';
+        password = fakePassword;
       });
 
       it('returns http code 200 whith valid params', async () => {
@@ -129,8 +140,8 @@ describe('AuthController', () => {
       });
       it('returns http code 401 whith invalid params', async () => {
         const authFields = {
-          email: 'r4nD0m@3M4Il.com',
-          password: 'r4Nd0mPa55w0rD'
+          email: fakeEmail,
+          password: fakePassword
         };
         const response = await request(app)
           .post(`${API}/auth/signin`)
@@ -148,13 +159,15 @@ describe('AuthController', () => {
       let password: string;
       let hashedPassword: string;
       let token: string;
+      fakePassword = faker.lorem.word(8);
+      fakeEmail = faker.internet.email();
       const jwtService = Container.get(JWTService);
 
       beforeEach(async () => {
-        hashedPassword = hashSync('password123', genSaltSync());
+        hashedPassword = hashSync(fakePassword, genSaltSync());
         const user = await factory(User)().create({ password: hashedPassword });
         email = user.email;
-        password = 'password123';
+        password = fakePassword;
         token = await jwtService.createJWT(user);
       });
 
@@ -167,7 +180,7 @@ describe('AuthController', () => {
           .post(`${API}/auth/logout`)
           .set({ Authorization: token })
           .send(authFields);
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(HttpStatusCode.OK);
       });
 
       it('returns http code 200 when the token starts with Bearer word', async () => {
@@ -182,7 +195,7 @@ describe('AuthController', () => {
           .post(`${API}/auth/logout`)
           .set({ Authorization: tokenWithBearer })
           .send(authFields);
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(HttpStatusCode.OK);
       });
 
       it('returns http code 401 because the token was invalidated', async () => {
@@ -198,7 +211,7 @@ describe('AuthController', () => {
           .post(`${API}/auth/logout`)
           .set({ Authorization: token })
           .send(authFields);
-        expect(response.status).toBe(401);
+        expect(response.status).toBe(HttpStatusCode.UNAUTHORIZED);
       });
     });
   });
