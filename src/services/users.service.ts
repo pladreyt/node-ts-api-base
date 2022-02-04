@@ -75,7 +75,7 @@ export class UsersService {
     } catch ( error ) {
       userData.verified = true;
       userData.verifyHash = null;
-      userData.hashExpiresAt = null;
+      userData.verifyHashExpiresAt = null;
       const user = await this.save(userData);
       return user;
     }
@@ -106,12 +106,12 @@ export class UsersService {
 
   async verifyUser(verifyHash: string): Promise<User> {
     const user = await this.showUserByHash(verifyHash);
-    if (new Date(user.hashExpiresAt) < new Date()) {
+    if (new Date(user.verifyHashExpiresAt) < new Date()) {
       throw new HashExpiredError();
     }
     user.verified = true;
     user.verifyHash = null;
-    user.hashExpiresAt = null;
+    user.verifyHashExpiresAt = null;
     await this.userRepository.update(user.id, user);
     return user;
   }
