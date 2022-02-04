@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { DeleteResult, getRepository } from 'typeorm';
+import { getRepository, UpdateResult } from 'typeorm';
 import { Target } from '@entities/target.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
 import { TargetErrorsMessages } from '@constants/errorMessages';
@@ -41,9 +41,9 @@ export class TargetsService {
     }
   }
 
-  async deleteTarget(id: number, userId: number): Promise<DeleteResult> {
+  async deleteTarget(id: number, userId: number): Promise<UpdateResult> {
     try {
-      const deleteResult = await this.targetRepository.delete(
+      const deleteResult = await this.targetRepository.softDelete(
         { id, userId }
       );
       return deleteResult;

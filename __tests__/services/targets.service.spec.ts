@@ -9,7 +9,7 @@ import { TargetNotSavedException } from '@exception/targets/target-not-saved.exc
 import * as faker from 'faker';
 import { UsersService } from '@services/users.service';
 import { DatabaseError } from '@exception/database.error';
-import { mockDeleteResult } from '../utils/mocks';
+import { mockUpdateResult } from '../utils/mocks';
 
 let targetsService: TargetsService;
 let usersService: UsersService;
@@ -140,16 +140,16 @@ describe('TargetsService', () => {
 
   describe('deleteTarget', () => {
     it('should delete the target', async () => {
-      jest.spyOn(targetRepository, 'delete')
-        .mockResolvedValueOnce(mockDeleteResult);
+      jest.spyOn(targetRepository, 'softDelete')
+        .mockResolvedValueOnce(mockUpdateResult);
 
       const response = await targetsService.deleteTarget(target.id, user.id);
-      expect(response).toEqual(mockDeleteResult);
+      expect(response).toEqual(mockUpdateResult);
     });
 
     it('should return error when deleting the target', async () => {
-      jest.spyOn(targetRepository, 'delete')
-        .mockRejectedValueOnce(mockDeleteResult);
+      jest.spyOn(targetRepository, 'softDelete')
+        .mockRejectedValueOnce(mockUpdateResult);
 
       await expect(targetsService.deleteTarget(target.id, user.id))
         .rejects.toThrowError(DatabaseError);
