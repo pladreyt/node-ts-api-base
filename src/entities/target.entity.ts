@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, ManyToOne } from 'typeorm';
 import { Base } from './base.entity';
 import { User } from './user.entity';
 
@@ -19,6 +19,9 @@ export class Target extends Base {
 
   @Column()
   userId: number;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   @ManyToOne(() => User, user => user.targets,
     { onDelete: 'CASCADE', onUpdate: 'CASCADE' }
