@@ -12,7 +12,7 @@ define(User, (faker: typeof Faker) => {
   user.password = faker.internet.password(8);
   user.verified = false;
   user.verifyHash = faker.random.uuid();
-  user.hashExpiresAt = faker.date.future();
+  user.verifyHashExpiresAt = faker.date.future();
 
   return user;
 });
