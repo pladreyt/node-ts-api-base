@@ -21,7 +21,7 @@
       "@middlewares": ["src/middlewares"],
       "@services/*": ["src/services/*"],
       "@constants/*": ["src/constants/*"],
-      "@utils/*": ["src/utils/*"],
+      "@utils": ["src/utils"],
       "@app": ["src/app"],
       "@ormconfig": ["ormconfig"],
       "@views": ["src/views"],
