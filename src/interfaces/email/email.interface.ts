@@ -6,6 +6,7 @@ export interface ISendGridOptions {
 export interface IEmail {
   from: string;
   to: string;
+  replyTo?: string;
   subject: string;
   text?: string;
 }
