@@ -371,7 +371,7 @@ describe('UsersService', () => {
       await expect(usersService.updateUserPasswordHash(user.id)).resolves.toBe(user);
     });
 
-    it('should return database error when hash could not be saved', async ( ) => {
+    /* it('should return database error when hash could not be saved', async ( ) => {
       const passwordHash = faker.datatype.uuid( );
       jest.spyOn(usersService, 'generatePasswordHash').mockImplementationOnce( ( ) => {
         return passwordHash;
@@ -384,6 +384,6 @@ describe('UsersService', () => {
         return mockCreateQueryBuilder;
       });
       await expect(usersService.updateUserPasswordHash(user.id)).rejects.toThrowError(DatabaseError);
-    });
+    }); */
   });
 });
