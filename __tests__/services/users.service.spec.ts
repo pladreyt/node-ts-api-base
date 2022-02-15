@@ -74,7 +74,7 @@ describe('UsersService', () => {
 
   describe('verifyUser', () => {
     beforeEach(async () => {
-      user = await factory(User)().create();
+      user = await factory(User)().make();
     });
 
     it('should throw HashInvalidError when the hash is invalid', async () => {
@@ -228,7 +228,7 @@ describe('UsersService', () => {
 
   describe('resetPassword', ( ) => {
     beforeAll(async () => {
-      user = await factory(User)().create();
+      user = await factory(User)().make();
       resetPassDTO = await factory(ResetPassDTO)().make({ email: user.email });
       user.passwordHashExpiresAt = faker.date.future();
     });

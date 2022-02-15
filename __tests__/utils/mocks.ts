@@ -1,3 +1,5 @@
+import { TargetRepository } from '@repositories/targets.repository';
+import { TopicRepository } from '@repositories/topics.repository';
 import { UserRepository } from '@repositories/users.repository';
 import { DeleteResult, InsertResult, UpdateResult } from 'typeorm';
 
@@ -20,4 +22,15 @@ export const mockUserRepository: Partial<UserRepository> = {
   update: jest.fn().mockReturnThis(),
   findOne: jest.fn().mockReturnThis(),
   createQueryBuilder: jest.fn().mockReturnThis()
+};
+
+export const mockTopicRepository: Partial<TopicRepository> = {
+  find: jest.fn().mockReturnThis()
+};
+
+export const mockTargetRepository: Partial<TargetRepository> = {
+  softDelete: jest.fn().mockReturnThis(),
+  find: jest.fn().mockReturnThis(),
+  save: jest.fn().mockReturnThis(),
+  count: jest.fn().mockReturnThis()
 };

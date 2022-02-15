@@ -42,7 +42,7 @@ export class AuthController {
       Verify my email</a>
       `
     };
-    // await EmailService.sendEmail( emailData );
+    await EmailService.sendEmail( emailData );
     return response.send(omit(newUser, ['password']));
   }
 
