@@ -2,29 +2,29 @@ import { Service } from 'typedi';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import {
   DeleteResult,
-  getRepository,
+  getCustomRepository,
   InsertResult,
   UpdateResult
 } from 'typeorm';
+import crypto from 'crypto';
 import { User } from '@entities/user.entity';
 import { JWTService } from '@services/jwt.service';
 import { AuthInterface, UserInterface } from '@interfaces';
 import { UserNotFoundError } from '@exception/users/user-not-found.error';
-import { HashInvalidError } from '@exception/users/hash-invalid.error';
 import { DatabaseError } from '@exception/database.error';
 import { UserErrorsMessages } from '@constants/errorMessages';
 import { RecoverPassDTO } from '@dto/recoverPassDTO';
 import { ResetPassDTO } from '@dto/resetPassDTO';
 import { IEmail } from 'src/interfaces/email/email.interface';
 import { EmailService } from './email.service';
-import crypto from 'crypto';
 import { checkHashIsExpired } from '@utils';
+import { UserRepository } from '@repositories/users.repository';
 
 @Service()
 export class UsersService {
   constructor(private readonly jwtService: JWTService) { }
 
-  private readonly userRepository = getRepository<User>(User);
+  private readonly userRepository = getCustomRepository<UserRepository>(UserRepository);
 
   comparePassword(input: AuthInterface.IComparePasswordInput): boolean {
     const { password, userPassword } = input;
@@ -47,20 +47,13 @@ export class UsersService {
     return this.userRepository.find();
   }
 
-  async showUser(id: number): Promise<User> {
-    const user = await this.userRepository.findOne(id);
-    if (!user) {
+  async showUserBy( criteria: Partial<User> ): Promise<User> {
+    try {
+      const user = await this.userRepository.findBy(criteria);
+      return user;
+    } catch ( error ) {
       throw new UserNotFoundError( );
     }
-    return user;
-  }
-
-  async showUserByHash(verifyHash: string): Promise<User> {
-    const user = await this.userRepository.findOne({ verifyHash });
-    if (!user) {
-      throw new HashInvalidError( );
-    }
-    return user;
   }
 
   async getUserByFBIDOrEmail(facebookID: string, email: string): Promise<User> {
@@ -70,24 +63,6 @@ export class UsersService {
       });
     if ( !user ) {
       throw new UserNotFoundError();
-    }
-    return user;
-  }
-
-  async showUserByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({ email });
-    if (!user) {
-      throw new UserNotFoundError( );
-    }
-    return user;
-  }
-
-  async showUserByEmailAndPassswordHash(
-    email: string, passwordHash: string
-  ): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { email, passwordHash } });
-    if (!user) {
-      throw new UserNotFoundError( );
     }
     return user;
   }
@@ -133,7 +108,7 @@ export class UsersService {
   }
 
   async verifyUser(verifyHash: string): Promise<User> {
-    const user = await this.showUserByHash(verifyHash);
+    const user = await this.showUserBy({ verifyHash });
     checkHashIsExpired( user.verifyHashExpiresAt );
     user.verified = true;
     user.verifyHash = null;
@@ -149,26 +124,16 @@ export class UsersService {
   async updateUserPasswordHash( userId: number ): Promise<User> {
     const passwordHash = this.generatePasswordHash( );
     try {
-      const user = await User
-        .createQueryBuilder()
-        .update(User)
-        .set(
-          { passwordHash: passwordHash,
-            // eslint-disable-next-line quotes
-            passwordHashExpiresAt: () => `NOW() +INTERVAL '1 day'`
-          }
-        )
-        .where('id = :id', { id: userId })
-        .execute();
-      return user.raw[0];
-    } catch ( error ) {
+      const user = await this.userRepository.updatePasswordHash( userId, passwordHash );
+      return user;
+    } catch (error) {
       throw new DatabaseError( `${UserErrorsMessages.USER_HASH_RECOVER_PASS}: ${error}`);
     }
   }
 
   async recoverPassword( recoverPassDTO: RecoverPassDTO ): Promise<boolean> {
     const email = recoverPassDTO.email;
-    let user = await this.showUserByEmail( email );
+    let user = await this.showUserBy({ email });
     user = await this.updateUserPasswordHash( user.id );
     const emailData: IEmail = {
       from: process.env.EMAIL_SENDER,
@@ -183,9 +148,9 @@ export class UsersService {
   }
 
   async resetPassword( resetData: ResetPassDTO ): Promise<User> {
-    const user = await this.showUserByEmailAndPassswordHash(
-      resetData.email, resetData.passwordHash
-    );
+    const email = resetData.email;
+    const passwordHash = resetData.passwordHash;
+    const user = await this.showUserBy({ email, passwordHash });
     checkHashIsExpired( user.passwordHashExpiresAt );
     user.password = resetData.password;
     this.hashUserPassword(user);

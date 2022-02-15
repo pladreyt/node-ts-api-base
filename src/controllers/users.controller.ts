@@ -40,7 +40,7 @@ export class UserController {
 
   @Get('/:id')
   async show(@Param('id') id: number): Promise<User | undefined> {
-    return this.usersService.showUser(id);
+    return this.usersService.showUserBy({ id });
   }
 
   @Post()

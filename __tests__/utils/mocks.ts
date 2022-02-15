@@ -1,3 +1,4 @@
+import { UserRepository } from '@repositories/users.repository';
 import { DeleteResult, InsertResult, UpdateResult } from 'typeorm';
 
 export const mockUpdateResult = new UpdateResult();
@@ -8,5 +9,15 @@ export const mockCreateQueryBuilder: any = {
   update: () => mockCreateQueryBuilder,
   set: () => mockCreateQueryBuilder,
   where: () => mockCreateQueryBuilder,
-  execute: () => mockCreateQueryBuilder
+  execute: () => mockCreateQueryBuilder,
+  getOneOrFail: () => mockCreateQueryBuilder
+};
+
+export const mockUserRepository: Partial<UserRepository> = {
+  findBy: jest.fn().mockReturnThis(),
+  updatePasswordHash: jest.fn().mockReturnThis(),
+  save: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
+  findOne: jest.fn().mockReturnThis(),
+  createQueryBuilder: jest.fn().mockReturnThis()
 };

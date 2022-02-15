@@ -4,8 +4,8 @@ import { genSaltSync, hashSync } from 'bcrypt';
 import { UsersService } from '@services/users.service';
 import { factory } from 'typeorm-seeding';
 import { User } from '@entities/user.entity';
-import { getRepository, Repository } from 'typeorm';
-import { mockCreateQueryBuilder, mockUpdateResult } from '../utils/mocks';
+import { getCustomRepository } from 'typeorm';
+import { mockUpdateResult, mockUserRepository } from '../utils/mocks';
 import { HashInvalidError } from '@exception/users/hash-invalid.error';
 import { HashExpiredError } from '@exception/users/hash-expired.error';
 import * as faker from 'faker';
@@ -15,26 +15,36 @@ import { JWTService } from '@services/jwt.service';
 import { ResetPassDTO } from '@dto/resetPassDTO';
 import { RecoverPassDTO } from '@dto/recoverPassDTO';
 import { EmailService } from '@services/email.service';
+import { mocked } from 'ts-jest/utils';
+import { UserRepository } from '@repositories/users.repository';
+jest.mock('typeorm', () => {
+  const actual = jest.requireActual('typeorm');
+  return {
+    ...actual,
+    getCustomRepository: jest.fn()
+  };
+});
+mocked(getCustomRepository).mockReturnValue(mockUserRepository);
 
 let usersService: UsersService;
 let jwtService: JWTService;
 let user: User;
 let token: string;
-let userRepository: Repository<User>;
 let resetPassDTO: ResetPassDTO;
 let recoverPassDTO: RecoverPassDTO;
+let userRepository: Partial<UserRepository>;
 
 describe('UsersService', () => {
   beforeAll( () => {
     usersService = Container.get(UsersService);
-    userRepository = getRepository<User>(User);
     jwtService = Container.get(JWTService);
+    userRepository = getCustomRepository(UserRepository);
   });
 
   it('all dependencies should be defined', () => {
     expect(usersService).toBeDefined();
-    expect(userRepository).toBeDefined();
     expect(jwtService).toBeDefined();
+    expect(getCustomRepository).toReturnWith(mockUserRepository);
   });
 
   describe('comparePassword', () => {
@@ -56,8 +66,8 @@ describe('UsersService', () => {
     });
 
     it("should return false when the passwords don't match", () => {
-      const password = faker.lorem.word(6);
-      const result = usersService.comparePassword({ password, userPassword });
+      const fakePass = faker.lorem.word(6);
+      const result = usersService.comparePassword({ password: fakePass, userPassword });
       expect(result).toBeFalsy();
     });
   });
@@ -70,7 +80,7 @@ describe('UsersService', () => {
     it('should throw HashInvalidError when the hash is invalid', async () => {
       user.verifyHash = faker.datatype.uuid();
 
-      jest.spyOn(usersService, 'showUserByHash')
+      jest.spyOn(usersService, 'showUserBy')
         .mockRejectedValueOnce(new HashInvalidError);
 
       await expect(usersService.verifyUser(user.verifyHash))
@@ -80,7 +90,7 @@ describe('UsersService', () => {
     it('should throw HashExpiredError when the hash is expired', async () => {
       user.verifyHashExpiresAt = faker.date.past();
 
-      jest.spyOn(usersService, 'showUserByHash')
+      jest.spyOn(usersService, 'showUserBy')
         .mockResolvedValueOnce(user);
 
       await expect(usersService.verifyUser(user.verifyHash))
@@ -88,7 +98,7 @@ describe('UsersService', () => {
     });
 
     it('should verify the user email when hash valid and not expired', async () => {
-      jest.spyOn(usersService, 'showUserByHash')
+      jest.spyOn(usersService, 'showUserBy')
         .mockResolvedValueOnce(user);
       jest.spyOn(userRepository, 'update')
         .mockResolvedValueOnce(mockUpdateResult);
@@ -175,83 +185,22 @@ describe('UsersService', () => {
     });
   });
 
-  describe('showUserByEmail', ( ) => {
+  describe('showUserBy', ( ) => {
     beforeAll(async () => {
       user = await factory(User)().make();
     });
 
-    it('should return the user when existing email provided', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(user);
-      await expect(usersService.showUserByEmail(user.email))
-        .resolves.toBe(user);
-    });
-
-    it('should return UserNotFound error when email does not exist', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(null);
-      await expect(usersService.showUserByEmail(user.email))
-        .rejects.toThrowError(UserNotFoundError);
-    });
-  });
-
-  describe('showUser', ( ) => {
-    beforeAll(async () => {
-      user = await factory(User)().create();
-    });
-
     it('should return the user when existing ID provided', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
+      jest.spyOn(userRepository, 'findBy')
         .mockResolvedValueOnce(user);
-      await expect(usersService.showUser(user.id))
+      await expect(usersService.showUserBy({ id: user.id }))
         .resolves.toBe(user);
     });
 
     it('should return UserNotFound error when ID does not exist', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(null);
-      await expect(usersService.showUser(user.id))
-        .rejects.toThrowError(UserNotFoundError);
-    });
-  });
-
-  describe('showUserByHash', ( ) => {
-    beforeAll(async () => {
-      user = await factory(User)().make();
-    });
-
-    it('should return the user when existing verifyHash provided', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(user);
-      await expect(usersService.showUserByHash(user.verifyHash))
-        .resolves.toBe(user);
-    });
-
-    it('should return UserNotFound error when verifyHash does not exist', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(null);
-      await expect(usersService.showUserByHash(user.verifyHash))
-        .rejects.toThrowError(HashInvalidError);
-    });
-  });
-
-  describe('showUserByEmailAndPasswordHash', ( ) => {
-    beforeAll(async () => {
-      user = await factory(User)().make();
-      user.passwordHash = faker.datatype.uuid();
-    });
-
-    it('should return the user when both email and passwordHash exist', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(user);
-      await expect(usersService.showUserByEmailAndPassswordHash(user.email, user.passwordHash))
-        .resolves.toBe(user);
-    });
-
-    it('should return UserNotFound error when both email and passwordHash do not exist', async ( ) => {
-      jest.spyOn(userRepository, 'findOne')
-        .mockResolvedValueOnce(null);
-      await expect(usersService.showUserByEmailAndPassswordHash(user.email, user.passwordHash))
+      jest.spyOn(userRepository, 'findBy')
+        .mockRejectedValueOnce(new Error('Test error.'));
+      await expect(usersService.showUserBy({ id: user.id }))
         .rejects.toThrowError(UserNotFoundError);
     });
   });
@@ -279,23 +228,26 @@ describe('UsersService', () => {
 
   describe('resetPassword', ( ) => {
     beforeAll(async () => {
-      user = await factory(User)().make();
+      user = await factory(User)().create();
       resetPassDTO = await factory(ResetPassDTO)().make({ email: user.email });
+      user.passwordHashExpiresAt = faker.date.future();
     });
 
     it('should return the user with the new password when email and password hash exists', async ( ) => {
-      jest.spyOn(usersService, 'showUserByEmailAndPassswordHash')
+      jest.spyOn(usersService, 'showUserBy')
         .mockResolvedValueOnce(user);
       jest.spyOn(usersService, 'hashUserPassword')
         .mockImplementationOnce( ( ) => {
           user.password = resetPassDTO.password;
         });
+      jest.spyOn(userRepository, 'save')
+        .mockResolvedValueOnce(user);
       await expect(usersService.resetPassword(resetPassDTO))
         .resolves.toBe(user);
     });
 
     it('should return UserNotFound when not valid email or hash', async ( ) => {
-      jest.spyOn(usersService, 'showUserByEmailAndPassswordHash')
+      jest.spyOn(usersService, 'showUserBy')
         .mockRejectedValueOnce(new UserNotFoundError());
       jest.spyOn(usersService, 'hashUserPassword')
         .mockImplementationOnce( ( ) => {
@@ -307,7 +259,7 @@ describe('UsersService', () => {
 
     it('should return HashExpiredError when passwordHash is expired', async ( ) => {
       user.passwordHashExpiresAt = faker.date.past();
-      jest.spyOn(usersService, 'showUserByEmailAndPassswordHash')
+      jest.spyOn(usersService, 'showUserBy')
         .mockResolvedValueOnce(user);
       jest.spyOn(usersService, 'hashUserPassword')
         .mockImplementationOnce( ( ) => {
@@ -325,7 +277,7 @@ describe('UsersService', () => {
     });
 
     it('should return true when email to recover password is correctly sent', async ( ) => {
-      jest.spyOn(usersService, 'showUserByEmail')
+      jest.spyOn(usersService, 'showUserBy')
         .mockResolvedValueOnce(user);
       jest.spyOn(usersService, 'updateUserPasswordHash')
         .mockImplementationOnce( async ( ) => {
@@ -340,7 +292,7 @@ describe('UsersService', () => {
     });
 
     it('should return error when user not found by email', async ( ) => {
-      jest.spyOn(usersService, 'showUserByEmail')
+      jest.spyOn(usersService, 'showUserBy')
         .mockRejectedValueOnce(new UserNotFoundError( ));
       jest.spyOn(usersService, 'updateUserPasswordHash')
         .mockImplementationOnce( async ( ) => {
@@ -362,28 +314,15 @@ describe('UsersService', () => {
         return passwordHash;
       });
       user.passwordHash = passwordHash;
-      jest.spyOn(User, 'createQueryBuilder').mockImplementationOnce( ( ) => {
-        mockCreateQueryBuilder.execute = () => {
-          return { raw: [user] };
-        };
-        return mockCreateQueryBuilder;
-      });
+      jest.spyOn(userRepository, 'updatePasswordHash')
+        .mockResolvedValueOnce(user);
       await expect(usersService.updateUserPasswordHash(user.id)).resolves.toBe(user);
     });
 
-    /* it('should return database error when hash could not be saved', async ( ) => {
-      const passwordHash = faker.datatype.uuid( );
-      jest.spyOn(usersService, 'generatePasswordHash').mockImplementationOnce( ( ) => {
-        return passwordHash;
-      });
-      user.passwordHash = passwordHash;
-      jest.spyOn(User, 'createQueryBuilder').mockImplementationOnce( ( ) => {
-        mockCreateQueryBuilder.execute = () => {
-          throw new Error('Test error');
-        };
-        return mockCreateQueryBuilder;
-      });
+    it('should return database error when hash could not be saved', async ( ) => {
+      jest.spyOn(userRepository, 'updatePasswordHash')
+        .mockRejectedValueOnce( new Error('Test Error'));
       await expect(usersService.updateUserPasswordHash(user.id)).rejects.toThrowError(DatabaseError);
-    }); */
+    });
   });
 });

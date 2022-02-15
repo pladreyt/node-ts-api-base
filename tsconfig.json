@@ -20,6 +20,7 @@
       "@interfaces": ["src/interfaces/index"],
       "@middlewares": ["src/middlewares"],
       "@services/*": ["src/services/*"],
+      "@repositories/*": ["src/repositories/*"],
       "@constants/*": ["src/constants/*"],
       "@utils": ["src/utils"],
       "@app": ["src/app"],
