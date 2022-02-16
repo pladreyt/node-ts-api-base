@@ -1,22 +1,24 @@
 /* eslint-disable max-len */
 import { Container } from 'typedi';
-import { genSaltSync, hashSync } from 'bcrypt';
+import { genSaltSync, hash } from 'bcrypt';
 import { UsersService } from '@services/users.service';
 import { factory } from 'typeorm-seeding';
-import { User } from '@entities/user.entity';
+import * as faker from 'faker';
 import { getCustomRepository } from 'typeorm';
-import { mockUpdateResult, mockUserRepository } from '../utils/mocks';
+import { mocked } from 'ts-jest/utils';
+import { User } from '@entities/user.entity';
+import { mockUpdateResult } from '../utils/mocks';
+import { mockUserRepository } from '../utils/repositories/user.repository.mock';
 import { HashInvalidError } from '@exception/users/hash-invalid.error';
 import { HashExpiredError } from '@exception/users/hash-expired.error';
-import * as faker from 'faker';
 import { UserNotFoundError } from '@exception/users/user-not-found.error';
 import { DatabaseError } from '@exception/database.error';
 import { JWTService } from '@services/jwt.service';
 import { ResetPassDTO } from '@dto/resetPassDTO';
 import { RecoverPassDTO } from '@dto/recoverPassDTO';
 import { EmailService } from '@services/email.service';
-import { mocked } from 'ts-jest/utils';
 import { UserRepository } from '@repositories/users.repository';
+
 jest.mock('typeorm', () => {
   const actual = jest.requireActual('typeorm');
   return {
@@ -52,11 +54,12 @@ describe('UsersService', () => {
     let fakePassword: string;
 
     beforeEach(() => {
-      fakePassword = faker.lorem.word(6);
-      userPassword = hashSync(fakePassword, genSaltSync());
+      fakePassword = faker.internet.password(8);
     });
 
-    it('should return true when the passwords match', () => {
+    it('should return true when the passwords match', async () => {
+      userPassword = await hash(fakePassword, genSaltSync());
+
       const hashedPassword = fakePassword;
       const result = usersService.comparePassword({
         password: hashedPassword,
@@ -65,9 +68,11 @@ describe('UsersService', () => {
       expect(result).toBeTruthy();
     });
 
-    it("should return false when the passwords don't match", () => {
-      const fakePass = faker.lorem.word(6);
-      const result = usersService.comparePassword({ password: fakePass, userPassword });
+    it("should return false when the passwords don't match", async () => {
+      userPassword = await hash(fakePassword, genSaltSync());
+
+      fakePassword = faker.internet.password(8);
+      const result = usersService.comparePassword({ password: fakePassword, userPassword });
       expect(result).toBeFalsy();
     });
   });

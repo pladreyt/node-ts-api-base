@@ -17,7 +17,7 @@ export class UserRepository extends Repository<User> {
   }
 
   async updatePasswordHash( userId: number, passwordHash: string ): Promise<User> {
-    const query = await this.createQueryBuilder()
+    await this.createQueryBuilder()
       .update(User)
       .set(
         { passwordHash: passwordHash,
@@ -26,8 +26,7 @@ export class UserRepository extends Repository<User> {
         }
       )
       .where('id = :id', { id: userId })
-      .returning('*')
       .execute();
-    return query.raw[0];
+    return this.findOne(userId);
   }
 }

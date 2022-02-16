@@ -4,3 +4,7 @@ beforeAll(async () => {
   await useSeeding();
 });
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+

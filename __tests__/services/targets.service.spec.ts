@@ -1,17 +1,17 @@
 /* eslint-disable max-len */
 import { Container } from 'typedi';
-import { TargetsService } from '@services/targets.service';
 import { getCustomRepository } from 'typeorm';
-import { Target } from '@entities/target.entity';
+import { mocked } from 'ts-jest/utils';
 import { factory } from 'typeorm-seeding';
+import * as faker from 'faker';
+import { Target } from '@entities/target.entity';
 import { User } from '@entities/user.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
-import * as faker from 'faker';
 import { UsersService } from '@services/users.service';
 import { DatabaseError } from '@exception/database.error';
 import { mockTargetRepository, mockUpdateResult } from '../utils/mocks';
 import { TargetRepository } from '@repositories/targets.repository';
-import { mocked } from 'ts-jest/utils';
+import { TargetsService } from '@services/targets.service';
 
 let targetsService: TargetsService;
 let usersService: UsersService;

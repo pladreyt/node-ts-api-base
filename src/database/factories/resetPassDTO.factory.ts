@@ -5,7 +5,7 @@ import { ResetPassDTO } from '@dto/resetPassDTO';
 define(ResetPassDTO, (faker: typeof Faker) => {
   const resetPassDTO = new ResetPassDTO();
   resetPassDTO.email = faker.internet.email();
-  resetPassDTO.password = faker.lorem.word(6);
+  resetPassDTO.password = faker.internet.password();
   resetPassDTO.passwordHash = faker.random.uuid();
 
   return resetPassDTO;
