@@ -1,7 +1,7 @@
-import { User } from '@entities/user.entity';
-import { UserRepository } from '@repositories/users.repository';
 import { factory } from 'typeorm-seeding';
 import * as faker from 'faker';
+import { User } from '@entities/user.entity';
+import { UserRepository } from '@repositories/users.repository';
 
 export const mockUserRepository: Partial<UserRepository> = {
   findBy: jest.fn().mockImplementation(async (
