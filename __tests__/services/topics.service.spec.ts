@@ -2,10 +2,10 @@ import { Container } from 'typedi';
 import { factory } from 'typeorm-seeding';
 import { getCustomRepository } from 'typeorm';
 import { mocked } from 'ts-jest/utils';
-import { mockTopicRepository } from '../utils/mocks';
 import { TopicRepository } from '@repositories/topics.repository';
 import { TopicsService } from '@services/topics.service';
 import { Topic } from '@entities/topic.entity';
+import { mockTopicRepository } from '../utils/repositories/topic.repository.mock';
 
 let topicsService: TopicsService;
 let topicRepository: Partial<TopicRepository>;

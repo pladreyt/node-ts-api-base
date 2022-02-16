@@ -9,9 +9,10 @@ import { User } from '@entities/user.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
 import { UsersService } from '@services/users.service';
 import { DatabaseError } from '@exception/database.error';
-import { mockTargetRepository, mockUpdateResult } from '../utils/mocks';
+import { mockUpdateResult } from '../utils/mocks';
 import { TargetRepository } from '@repositories/targets.repository';
 import { TargetsService } from '@services/targets.service';
+import { mockTargetRepository } from '../utils/repositories/target.repository.mock';
 
 let targetsService: TargetsService;
 let usersService: UsersService;

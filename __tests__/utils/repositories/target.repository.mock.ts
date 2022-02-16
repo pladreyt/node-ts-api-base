@@ -1,6 +1,6 @@
 import { TargetRepository } from '@repositories/targets.repository';
 
-export const mockUserRepository: Partial<TargetRepository> = {
+export const mockTargetRepository: Partial<TargetRepository> = {
   count: jest.fn().mockReturnThis(),
   save: jest.fn().mockReturnThis(),
   find: jest.fn().mockReturnThis(),
