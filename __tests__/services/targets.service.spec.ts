@@ -1,29 +1,40 @@
 /* eslint-disable max-len */
 import { Container } from 'typedi';
-import { TargetsService } from '@services/targets.service';
-import { getRepository, Repository } from 'typeorm';
-import { Target } from '@entities/target.entity';
+import { getCustomRepository } from 'typeorm';
+import { mocked } from 'ts-jest/utils';
 import { factory } from 'typeorm-seeding';
+import * as faker from 'faker';
+import { Target } from '@entities/target.entity';
 import { User } from '@entities/user.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
-import * as faker from 'faker';
 import { UsersService } from '@services/users.service';
 import { DatabaseError } from '@exception/database.error';
 import { mockUpdateResult } from '../utils/mocks';
+import { TargetRepository } from '@repositories/targets.repository';
+import { TargetsService } from '@services/targets.service';
+import { mockTargetRepository } from '../utils/repositories/target.repository.mock';
 
 let targetsService: TargetsService;
 let usersService: UsersService;
-let targetRepository: Repository<Target>;
 let target: Target;
 let user: User;
 let numberOfTargets: number;
+let targetRepository: Partial<TargetRepository>;
+jest.mock('typeorm', () => {
+  const actual = jest.requireActual('typeorm');
+  return {
+    ...actual,
+    getCustomRepository: jest.fn()
+  };
+});
+mocked(getCustomRepository).mockReturnValue(mockTargetRepository);
 
 describe('TargetsService', () => {
   beforeAll(async () => {
     targetsService = Container.get(TargetsService);
     usersService = Container.get(UsersService);
-    targetRepository = getRepository<Target>(Target);
-    user = await factory(User)().create();
+    targetRepository = getCustomRepository<TargetRepository>(TargetRepository);
+    user = await factory(User)().make();
     numberOfTargets = faker.datatype.number({
       'min': 0,
       'max': 9
@@ -67,7 +78,7 @@ describe('TargetsService', () => {
   describe('createTarget', () => {
     beforeAll(async () => {
       target = await factory(Target)().make();
-      user = await factory(User)().create();
+      user = await factory(User)().make();
     });
 
     it('should create the target', async () => {
@@ -106,8 +117,8 @@ describe('TargetsService', () => {
 
   describe('listTargets', () => {
     beforeEach(async () => {
-      user = await factory(User)().create();
-      target = await factory(Target)().create({ userId: user.id });
+      user = await factory(User)().make();
+      target = await factory(Target)().make({ userId: user.id });
     });
 
 

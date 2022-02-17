@@ -1,13 +1,15 @@
 import { Service } from 'typedi';
-import { getRepository, UpdateResult } from 'typeorm';
+import { getCustomRepository, UpdateResult } from 'typeorm';
 import { Target } from '@entities/target.entity';
 import { TargetNotSavedException } from '@exception/targets/target-not-saved.exception';
 import { TargetErrorsMessages } from '@constants/errorMessages';
 import { DatabaseError } from '@exception/database.error';
+import { TargetRepository } from '@repositories/targets.repository';
 
 @Service()
 export class TargetsService {
-  private readonly targetRepository = getRepository<Target>(Target);
+  // eslint-disable-next-line max-len
+  private readonly targetRepository = getCustomRepository<TargetRepository>(TargetRepository);
 
   async canCreateTargets(userId: number): Promise<boolean> {
     try {

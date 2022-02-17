@@ -32,6 +32,13 @@ export class User extends Base {
   @Column({ nullable: true, type: 'timestamp', default: () => `NOW() +INTERVAL '1 day'` })
   verifyHashExpiresAt: Date | null;
 
+  @Column({ nullable: true })
+  passwordHash: string | null;
+
+  // eslint-disable-next-line quotes
+  @Column({ nullable: true, type: 'timestamp', default: null })
+  passwordHashExpiresAt: Date | null;
+
   @Column({ unique: true, nullable: true })
   facebookID: string | null;
 

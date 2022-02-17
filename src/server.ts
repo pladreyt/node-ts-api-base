@@ -23,4 +23,6 @@ export const redisClient = createRedisClient();
 
 export const emailClient = createEmailClient();
 
-connection.create(handleConnection);
+if (!TESTING_ENV && !CI_ENV) {
+  connection.create(handleConnection);
+}

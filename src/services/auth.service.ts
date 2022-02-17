@@ -6,12 +6,14 @@ import { ITokenPayload } from 'src/interfaces/auth/auth.interface';
 
 @Service()
 export class AuthorizationService {
+  constructor(
+    private readonly jwt: JWTService,
+    private readonly redis: RedisService
+  ) { }
   private static instance: AuthorizationService;
-  private static jwt = Container.get(JWTService);
-  private static redis = Container.get(RedisService);
   public static getInstance(): AuthorizationService {
     if (!this.instance) {
-      this.instance = new AuthorizationService();
+      this.instance = Container.get(AuthorizationService);
     }
 
     return this.instance;
@@ -26,11 +28,11 @@ export class AuthorizationService {
         // Remove Bearer from authentication scheme header
         token = token.replace('Bearer ', '');
       }
-      const payload = await AuthorizationService.jwt.verifyJWT(token);
+      const payload = await this.jwt.verifyJWT(token);
       const {
         data: { email }
       } = payload;
-      const tokenIsBlacklisted: number = await AuthorizationService.redis.isMemberOfSet({
+      const tokenIsBlacklisted: number = await this.redis.isMemberOfSet({
         email,
         token
       });

@@ -17,6 +17,8 @@ import { UsersService } from '@services/users.service';
 import { ErrorsMessages } from '../constants/errorMessages';
 import { SignUpDTO } from '@dto/signUpDTO';
 import { EntityMapper } from '@clients/mapper/entityMapper.service';
+import { RecoverPassDTO } from '@dto/recoverPassDTO';
+import { ResetPassDTO } from '@dto/resetPassDTO';
 
 @JsonController('/users')
 @Service()
@@ -38,7 +40,7 @@ export class UserController {
 
   @Get('/:id')
   async show(@Param('id') id: number): Promise<User | undefined> {
-    return this.usersService.showUser(id);
+    return this.usersService.showUserBy({ id });
   }
 
   @Post()
@@ -67,5 +69,22 @@ export class UserController {
   @Delete('/:id')
   async delete(@Param('id') id: number): Promise<DeleteResult> {
     return this.usersService.deleteUser(id);
+  }
+
+  @Post('/recoverPassword')
+  async recoverPassword(
+    @Body({ validate: true }) recoverPassDTO: RecoverPassDTO
+  ): Promise<boolean> {
+    return this.usersService.recoverPassword(
+      recoverPassDTO
+    );
+  }
+
+  @Post('/resetPassword')
+  async resetPassword(
+    @Body({ validate: true }) resetPassDTO: ResetPassDTO
+  ): Promise<string> {
+    const user = await this.usersService.resetPassword(resetPassDTO);
+    return this.usersService.generateToken(user);
   }
 }

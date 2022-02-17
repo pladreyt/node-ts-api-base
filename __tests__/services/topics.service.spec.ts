@@ -1,17 +1,27 @@
 import { Container } from 'typedi';
+import { factory } from 'typeorm-seeding';
+import { getCustomRepository } from 'typeorm';
+import { mocked } from 'ts-jest/utils';
+import { TopicRepository } from '@repositories/topics.repository';
 import { TopicsService } from '@services/topics.service';
 import { Topic } from '@entities/topic.entity';
-import { factory } from 'typeorm-seeding';
-import { getRepository, Repository } from 'typeorm';
+import { mockTopicRepository } from '../utils/repositories/topic.repository.mock';
 
 let topicsService: TopicsService;
-let topicRepository: Repository<Topic>;
+let topicRepository: Partial<TopicRepository>;
 let topic: Topic;
-
+jest.mock('typeorm', () => {
+  const actual = jest.requireActual('typeorm');
+  return {
+    ...actual,
+    getCustomRepository: jest.fn()
+  };
+});
+mocked(getCustomRepository).mockReturnValue(mockTopicRepository);
 describe('TopicsService', () => {
   beforeAll( () => {
     topicsService = Container.get(TopicsService);
-    topicRepository = getRepository<Topic>(Topic);
+    topicRepository = getCustomRepository(TopicRepository);
   });
 
   it('all dependencies should be defined', () => {
