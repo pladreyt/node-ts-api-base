@@ -1,5 +1,7 @@
+/* eslint-disable camelcase */
 import { Column, DeleteDateColumn, Entity, ManyToOne } from 'typeorm';
 import { Base } from './base.entity';
+import { Topic } from './topic.entity';
 import { User } from './user.entity';
 
 @Entity()
@@ -20,6 +22,12 @@ export class Target extends Base {
   @Column()
   userId: number;
 
+  @Column()
+  topicId: number;
+
+  @Column({ default: true })
+  awaiting_cron: boolean;
+
   @DeleteDateColumn()
   deletedAt: Date | null;
 
@@ -27,4 +35,9 @@ export class Target extends Base {
     { onDelete: 'CASCADE', onUpdate: 'CASCADE' }
   )
   user: User;
+
+  @ManyToOne(() => Topic, topic => topic.targets,
+    { onDelete: 'CASCADE', onUpdate: 'CASCADE' }
+  )
+  topic: Topic;
 }

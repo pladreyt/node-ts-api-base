@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { Base } from './base.entity';
+import { Target } from './target.entity';
 
 @Entity()
 export class Topic extends Base {
@@ -14,4 +15,7 @@ export class Topic extends Base {
 
   @Column()
   image: string;
+
+  @OneToMany(() => Target, target => target.topic )
+  targets: Target[];
 }

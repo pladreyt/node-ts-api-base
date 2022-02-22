@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable max-len */
 import { Container } from 'typedi';
 import { getCustomRepository } from 'typeorm';
@@ -33,7 +34,7 @@ describe('TargetsService', () => {
   beforeAll(async () => {
     targetsService = Container.get(TargetsService);
     usersService = Container.get(UsersService);
-    targetRepository = getCustomRepository<TargetRepository>(TargetRepository);
+    targetRepository = getCustomRepository(TargetRepository);
     user = await factory(User)().make();
     numberOfTargets = faker.datatype.number({
       'min': 0,
@@ -44,10 +45,12 @@ describe('TargetsService', () => {
   it('all dependencies should be defined', () => {
     expect(targetsService).toBeDefined();
     expect(usersService).toBeDefined();
+    expect(targetRepository).toBeDefined();
+    expect(getCustomRepository).toReturnWith(mockTargetRepository);
   });
 
   describe('canCreateTargets', () => {
-    it('should return true if targets < 10', async () => {
+    it('should return true when targets < 10', async () => {
       jest.spyOn(targetRepository, 'count')
         .mockResolvedValueOnce(numberOfTargets);
 
@@ -55,7 +58,7 @@ describe('TargetsService', () => {
       expect(response).toBeTruthy();
     });
 
-    it('should return false if targets >= 10', async () => {
+    it('should return false when targets >= 10', async () => {
       numberOfTargets = faker.datatype.number({
         'min': 10
       });
@@ -66,7 +69,7 @@ describe('TargetsService', () => {
       expect(response).toBeFalsy();
     });
 
-    it('should return an error', async () => {
+    it('should return an error when database cannot be accessed', async () => {
       jest.spyOn(targetRepository, 'count')
         .mockRejectedValueOnce(new Error('Test error'));
 
@@ -77,11 +80,11 @@ describe('TargetsService', () => {
 
   describe('createTarget', () => {
     beforeAll(async () => {
-      target = await factory(Target)().make();
       user = await factory(User)().make();
+      target = await factory(Target)().make();
     });
 
-    it('should create the target', async () => {
+    it('should create the target when data provided is valid', async () => {
       jest.spyOn(targetsService, 'canCreateTargets')
         .mockResolvedValueOnce(true);
 
@@ -118,11 +121,11 @@ describe('TargetsService', () => {
   describe('listTargets', () => {
     beforeEach(async () => {
       user = await factory(User)().make();
-      target = await factory(Target)().make({ userId: user.id });
+      target = await factory(Target)().make();
     });
 
 
-    it('should return a list of targets for the user', async () => {
+    it('should return a list of targets for the user when requested', async () => {
       jest.spyOn(targetRepository, 'find')
         .mockResolvedValueOnce([target]);
 
@@ -131,7 +134,7 @@ describe('TargetsService', () => {
       expect(response[0]).toBeInstanceOf(Target);
     });
 
-    it('returns empty array if no targets found', async () => {
+    it('returns empty array when no targets found', async () => {
       jest.spyOn(targetRepository, 'find')
         .mockResolvedValueOnce([]);
 
@@ -164,6 +167,67 @@ describe('TargetsService', () => {
 
       await expect(targetsService.deleteTarget(target.id, user.id))
         .rejects.toThrowError(DatabaseError);
+    });
+  });
+
+  describe('showTargetsByTopic', ( ) => {
+    const targets: Target[] = [];
+    beforeEach( async ( ) => {
+      for (let i = 1; i<4; i++) {
+        target = await factory(Target)().make({ userId: i, topicId: i });
+        targets.push(target);
+      }
+    });
+
+    it('should retrieve the targets segmented by topic when requested', async ( ) => {
+      jest.spyOn(targetRepository, 'showTargets')
+        .mockResolvedValue(targets);
+      const targetsByTopic = await targetsService.showTargetsByTopic( );
+      expect(Object.keys(targetsByTopic).length).toBe(3);
+    });
+
+    it('should throw error when the database cannot be accessed', async ( ) => {
+      jest.spyOn(targetRepository, 'showTargets')
+        .mockRejectedValueOnce(new Error('Test Error'));
+      await expect(targetsService.showTargetsByTopic())
+        .rejects.toThrowError(Error);
+    });
+  });
+
+  describe('getTargetsMatched', ( ) => {
+    let targets: Target[];
+    beforeEach( ( ) => {
+      targets = [];
+    });
+
+    it('should return an array with targets when there are targets that matched', async ( ) => {
+      for (let i = 1; i<4; i++) {
+        target = await factory(Target)().make({
+          userId: i,
+          topicId: 1,
+          awaiting_cron: true,
+          location: '50,50'
+        });
+        targets.push(target);
+      }
+      const targetsMatched = targetsService.getTargetsMatched(targets);
+      expect(targetsMatched).toBeInstanceOf(Array);
+      expect(targetsMatched).not.toHaveLength(0);
+    });
+
+    it('should return an empty array when no targets matched', async ( ) => {
+      for (let i = 1; i<4; i++) {
+        target = await factory(Target)().make({
+          userId: 1,
+          topicId: i,
+          awaiting_cron: true,
+          location: '50,50'
+        });
+        targets.push(target);
+      }
+      const targetsMatched = targetsService.getTargetsMatched(targets);
+      expect(targetsMatched).toBeInstanceOf(Array);
+      expect(targetsMatched).toHaveLength(0);
     });
   });
 });
