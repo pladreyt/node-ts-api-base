@@ -26,33 +26,6 @@ describe('TargetRepository', () => {
     expect(targetRepository).toBeDefined();
   });
 
-  describe('findBy', ( ) => {
-    beforeEach( async ( ) => {
-      target = await factory(Target)().make({ awaiting_cron: true });
-    });
-
-    it('should return list of targets when criteria found on database', async ( ) => {
-      targetRepository.createQueryBuilder = mockQueryBuilder(
-        { getManyResponse: [target] }
-      );
-      const targetsFound = await targetRepository.findBy({ awaiting_cron: true });
-      expect(targetsFound).toBeInstanceOf(Array);
-      expect(targetsFound).not.toHaveLength(0);
-      expect(targetsFound.every(
-        (target: Target) => target.awaiting_cron === true)
-      ).toBe(true);
-    });
-
-    it('should return an empty list when criteria not found on database', async ( ) => {
-      targetRepository.createQueryBuilder = mockQueryBuilder(
-        { getManyResponse: [] }
-      );
-      const targetsFound = await targetRepository.findBy({ awaiting_cron: true });
-      expect(targetsFound).toBeInstanceOf(Array);
-      expect(targetsFound).toHaveLength(0);
-    });
-  });
-
   describe('showTargets', () => {
     it('should return list of targets when requested', async ( ) => {
       targetRepository.createQueryBuilder = mockQueryBuilder(

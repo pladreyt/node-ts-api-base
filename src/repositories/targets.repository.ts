@@ -11,12 +11,4 @@ export class TargetRepository extends Repository<Target> {
       .getMany();
     return targets;
   }
-
-  async findBy(criteria: Partial<Target>): Promise<Target[]> {
-    const query = this.createQueryBuilder( );
-    criteria.awaiting_cron && query.andWhere('awaiting_cron = :awaiting_cron',
-      { awaiting_cron: criteria.awaiting_cron }
-    );
-    return query.getMany();
-  }
 }
