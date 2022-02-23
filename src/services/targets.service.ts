@@ -66,7 +66,7 @@ export class TargetsService {
             possibleMatchPosition,
             target.radius )
           ) {
-            targetsMatched.push([newTarget, target]);
+            targetsMatched.push({ newTarget, target });
           }
         }
       });
