@@ -10,8 +10,7 @@ export const mockTargetRepository: Partial<TargetRepository> = {
   find: jest.fn().mockReturnThis(),
   softDelete: jest.fn().mockReturnThis(),
   updateAwaitingCron: jest.fn().mockImplementation( async ( ) => {
-    const targetUpdated = await factory(Target)().make();
-    targetUpdated.awaiting_cron = false;
+    await factory(Target)().make({ awaiting_cron: false });
     return mockUpdateResult;
   }),
   showTargets: jest.fn().mockImplementation( async ( ) => {
