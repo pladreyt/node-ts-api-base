@@ -4,6 +4,7 @@ import connection from '@database/connection';
 import app from '@app';
 import { createRedisClient } from '@clients/redis/redis.client';
 import { createEmailClient } from '@clients/email/email.client';
+import { createSocketClient } from '@clients/socket/socket.client';
 
 const handleConnection = async () => {
   // run express application on given port
@@ -24,5 +25,9 @@ export const redisClient = createRedisClient();
 export const emailClient = createEmailClient();
 
 if (!TESTING_ENV && !CI_ENV) {
-  connection.create(handleConnection);
+  (async ( ) => {
+    await connection.create(handleConnection);
+    require('./crons/index');
+  })( );
 }
+export const socketClient = createSocketClient(app);
