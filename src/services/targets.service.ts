@@ -21,7 +21,7 @@ export class TargetsService {
     }
   }
 
-  async createTarget(target: Target, userId: number): Promise<Target> {
+  async createTarget(target: Target, userId: number ): Promise<Target> {
     try {
       const canCreate = await this.canCreateTargets(userId);
       if (!canCreate) {
@@ -47,7 +47,7 @@ export class TargetsService {
     return targetsByTopic;
   }
 
-  getTargetsMatched( targets: Target[] ): Target[] {
+  getTargetsMatched( targets: Target[] ) {
     const targetsMatched = [];
     const newTargets = targets.filter( target => target.awaiting_cron );
     newTargets.forEach( (newTarget: Target) => {
@@ -78,6 +78,25 @@ export class TargetsService {
     try {
       const targets = await this.targetRepository.find({ userId });
       return targets;
+    } catch (error) {
+      throw new DatabaseError(`${error}`);
+    }
+  }
+
+  async updateAwaitingCron( ): Promise<UpdateResult> {
+    try {
+      const updateResult = await this.targetRepository.updateAwaitingCron();
+      return updateResult;
+    } catch ( error ) {
+      throw new DatabaseError(`${error}`);
+    }
+  }
+
+  async anyNewTargets( ): Promise<boolean> {
+    try {
+      // eslint-disable-next-line camelcase
+      const countTargets = await this.targetRepository.count({ awaiting_cron: true });
+      return countTargets > 0;
     } catch (error) {
       throw new DatabaseError(`${error}`);
     }

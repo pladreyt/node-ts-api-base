@@ -170,6 +170,51 @@ describe('TargetsService', () => {
     });
   });
 
+  describe('anyNewTargets', () => {
+    beforeEach( ( ) => {
+      numberOfTargets = faker.datatype.number({
+        'min': 1
+      });
+    });
+
+    it('should return true when any new targets created', async () => {
+      jest.spyOn(targetRepository, 'count')
+        .mockResolvedValueOnce(numberOfTargets);
+      await expect(targetsService.anyNewTargets())
+        .resolves.toBeTruthy();
+    });
+
+    it('should return false when there are no new targets created', async () => {
+      jest.spyOn(targetRepository, 'count')
+        .mockResolvedValueOnce(0);
+      await expect(targetsService.anyNewTargets())
+        .resolves.toBeFalsy();
+    });
+
+    it('should return error when database cannot be accessed', async () => {
+      jest.spyOn(targetRepository, 'count')
+        .mockRejectedValueOnce(new Error('Test Error'));
+      await expect(targetsService.anyNewTargets())
+        .rejects.toThrowError(DatabaseError);
+    });
+  });
+
+  describe('updateAwaitingCron', ( ) => {
+    it('should update the targets when requested', async ( ) => {
+      jest.spyOn(targetRepository, 'updateAwaitingCron')
+        .mockResolvedValue(mockUpdateResult);
+      await expect(targetsService.updateAwaitingCron())
+        .resolves.toBe(mockUpdateResult);
+    });
+
+    it('should throw error when the targets cannot be updated', async ( ) => {
+      jest.spyOn(targetRepository, 'updateAwaitingCron')
+        .mockRejectedValueOnce(mockUpdateResult);
+      await expect(targetsService.updateAwaitingCron())
+        .rejects.toThrowError(DatabaseError);
+    });
+  });
+
   describe('showTargetsByTopic', ( ) => {
     const targets: Target[] = [];
     beforeEach( async ( ) => {

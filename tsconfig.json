@@ -22,6 +22,7 @@
       "@services/*": ["src/services/*"],
       "@repositories/*": ["src/repositories/*"],
       "@constants/*": ["src/constants/*"],
+      "@crons/*": ["src/crons/*"],
       "@utils": ["src/utils"],
       "@app": ["src/app"],
       "@ormconfig": ["ormconfig"],
