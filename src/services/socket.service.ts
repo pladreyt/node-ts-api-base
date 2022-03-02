@@ -1,18 +1,21 @@
+/* eslint-disable max-len */
 import { Service } from 'typedi';
 import { socketClient } from '@server';
+import { IMatchingTargets } from 'src/interfaces/target/target.interface';
+import { Target } from '@entities/target.entity';
 
 @Service()
 export class SocketService {
-  notifyTargetsMatched( matchingTargets: any ) {
-    socketClient.to(`user:${matchingTargets.newTarget.userId}`)
+  notifyTargetsMatched( matchingTargets: IMatchingTargets ) {
+    this.notifyMatchedTargetToUser( matchingTargets.target, matchingTargets.newTarget.userId );
+    this.notifyMatchedTargetToUser( matchingTargets.newTarget, matchingTargets.target.userId );
+  }
+
+  private notifyMatchedTargetToUser( target: Target, userId: number ) {
+    socketClient.to(`user:${userId}`)
       .emit('target_match',
-        `Congrats! You matched with ${matchingTargets.target.user.firstName}
-        on ${matchingTargets.target.topic.name}`
-      );
-    socketClient.to(`user:${matchingTargets.target.userId}`)
-      .emit('target_match',
-        `Congrats! You matched with ${matchingTargets.newTarget.user.firstName}
-        on ${matchingTargets.newTarget.topic.name}`
+        `Congrats! You matched with ${target.user.firstName}
+        on ${target.topic.name}`
       );
   }
 }

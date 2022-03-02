@@ -6,7 +6,8 @@ import { TargetNotSavedException } from '@exception/targets/target-not-saved.exc
 import { TargetErrorsMessages } from '@constants/errorMessages';
 import { DatabaseError } from '@exception/database.error';
 import { TargetRepository } from '@repositories/targets.repository';
-
+import { ErrorsMessages } from '@constants/errorMessages';
+import { IMatchingTargets } from 'src/interfaces/target/target.interface';
 @Service()
 export class TargetsService {
   // eslint-disable-next-line max-len
@@ -47,7 +48,7 @@ export class TargetsService {
     return targetsByTopic;
   }
 
-  getTargetsMatched( targets: Target[] ): Target[] {
+  getTargetsMatched( targets: Target[] ): IMatchingTargets[] {
     const targetsMatched = [];
     targets.filter( target => target.awaiting_cron ).forEach( (newTarget: Target) => {
       const newTargetPosition = {
@@ -78,7 +79,7 @@ export class TargetsService {
       const targets = await this.targetRepository.find({ userId });
       return targets;
     } catch (error) {
-      throw new DatabaseError(`${error}`);
+      throw new DatabaseError(ErrorsMessages.DATABASE_ERROR);
     }
   }
 
@@ -87,7 +88,7 @@ export class TargetsService {
       const updateResult = await this.targetRepository.updateAwaitingCron();
       return updateResult;
     } catch ( error ) {
-      throw new DatabaseError(`${error}`);
+      throw new DatabaseError(ErrorsMessages.DATABASE_ERROR);
     }
   }
 
@@ -97,7 +98,7 @@ export class TargetsService {
       const countTargets = await this.targetRepository.count({ awaiting_cron: true });
       return countTargets > 0;
     } catch (error) {
-      throw new DatabaseError(`${error}`);
+      throw new DatabaseError(ErrorsMessages.DATABASE_ERROR);
     }
   }
 
@@ -108,7 +109,7 @@ export class TargetsService {
       );
       return deleteResult;
     } catch ( error ) {
-      throw new DatabaseError(`${error}`);
+      throw new DatabaseError(ErrorsMessages.DATABASE_ERROR);
     }
   }
 }

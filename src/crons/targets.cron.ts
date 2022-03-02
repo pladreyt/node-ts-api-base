@@ -3,6 +3,8 @@ import cron from 'node-cron';
 import { Service } from 'typedi';
 import { TargetsService } from '@services/targets.service';
 import { SocketService } from '@services/socket.service';
+import { CRON_DURATION } from '@constants/cronDuration';
+import { IMatchingTargets } from 'src/interfaces/target/target.interface';
 
 @Service()
 export class TargetCron {
@@ -17,7 +19,7 @@ export class TargetCron {
         const targetsMatched = this.targetsService.getTargetsMatched( targetsByTopic[topicId] );
         targetsMatch = [...targetsMatch, targetsMatched].flat();
       });
-      targetsMatch.forEach( ( targets: any ) => {
+      targetsMatch.forEach( ( targets: IMatchingTargets ) => {
         this.socketService.notifyTargetsMatched(targets);
       });
       await this.targetsService.updateAwaitingCron( );
@@ -25,7 +27,7 @@ export class TargetCron {
   }
 
   start( ) {
-    cron.schedule('*/30 * * * *', ( ) => {
+    cron.schedule(CRON_DURATION.EVERY_30_MINUTES, ( ) => {
       this.checkTargetsMatch();
     });
   }
