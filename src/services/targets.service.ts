@@ -47,7 +47,7 @@ export class TargetsService {
     return targetsByTopic;
   }
 
-  getTargetsMatched( targets: Target[] ): Target[] {
+  getTargetsMatched( targets: Target[] ) {
     const targetsMatched = [];
     targets.filter( target => target.awaiting_cron ).forEach( (newTarget: Target) => {
       const newTargetPosition = {
