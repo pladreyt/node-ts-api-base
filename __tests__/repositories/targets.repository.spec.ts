@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 import { getCustomRepository } from 'typeorm';
 import { mocked } from 'ts-jest/utils';
-import { factory } from 'typeorm-seeding';
 import { Target } from '@entities/target.entity';
 import { TargetRepository } from '@repositories/targets.repository';
 import { mockQueryBuilder } from '../utils/mocks';

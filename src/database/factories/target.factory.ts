@@ -8,6 +8,8 @@ define(Target, (faker: typeof Faker) => {
   const target = new Target(latitude, longitude);
   target.title = faker.random.word();
   target.radius = faker.random.number();
+  target.userId = faker.random.number();
+  target.topicId = faker.random.number();
 
   return target;
 });

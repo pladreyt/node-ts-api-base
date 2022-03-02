@@ -49,8 +49,7 @@ export class TargetsService {
 
   getTargetsMatched( targets: Target[] ): Target[] {
     const targetsMatched = [];
-    const newTargets = targets.filter( target => target.awaiting_cron );
-    newTargets.forEach( (newTarget: Target) => {
+    targets.filter( target => target.awaiting_cron ).forEach( (newTarget: Target) => {
       const newTargetPosition = {
         latitude: newTarget.location[0],
         longitude: newTarget.location[1]

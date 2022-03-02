@@ -14,6 +14,7 @@ import { mockUpdateResult } from '../utils/mocks';
 import { TargetRepository } from '@repositories/targets.repository';
 import { TargetsService } from '@services/targets.service';
 import { mockTargetRepository } from '../utils/repositories/target.repository.mock';
+import { createTargets } from '../utils/targets';
 
 let targetsService: TargetsService;
 let usersService: UsersService;
@@ -46,7 +47,6 @@ describe('TargetsService', () => {
     expect(targetsService).toBeDefined();
     expect(usersService).toBeDefined();
     expect(targetRepository).toBeDefined();
-    expect(getCustomRepository).toReturnWith(mockTargetRepository);
   });
 
   describe('canCreateTargets', () => {
@@ -171,12 +171,9 @@ describe('TargetsService', () => {
   });
 
   describe('showTargetsByTopic', ( ) => {
-    const targets: Target[] = [];
+    let targets: Target[];
     beforeEach( async ( ) => {
-      for (let i = 1; i<4; i++) {
-        target = await factory(Target)().make({ userId: i, topicId: i });
-        targets.push(target);
-      }
+      targets = await createTargets(3);
     });
 
     it('should retrieve the targets segmented by topic when requested', async ( ) => {
@@ -201,30 +198,22 @@ describe('TargetsService', () => {
     });
 
     it('should return an array with targets when there are targets that matched', async ( ) => {
-      for (let i = 1; i<4; i++) {
-        target = await factory(Target)().make({
-          userId: i,
-          topicId: 1,
-          awaiting_cron: true,
-          location: '50,50'
-        });
-        targets.push(target);
-      }
+      targets = await createTargets(3, {
+        topicId: 1,
+        awaiting_cron: true,
+        location: '50,50'
+      });
       const targetsMatched = targetsService.getTargetsMatched(targets);
       expect(targetsMatched).toBeInstanceOf(Array);
       expect(targetsMatched).not.toHaveLength(0);
     });
 
     it('should return an empty array when no targets matched', async ( ) => {
-      for (let i = 1; i<4; i++) {
-        target = await factory(Target)().make({
-          userId: 1,
-          topicId: i,
-          awaiting_cron: true,
-          location: '50,50'
-        });
-        targets.push(target);
-      }
+      targets = await createTargets(3, {
+        userId: 1,
+        awaiting_cron: true,
+        location: '50,50'
+      });
       const targetsMatched = targetsService.getTargetsMatched(targets);
       expect(targetsMatched).toBeInstanceOf(Array);
       expect(targetsMatched).toHaveLength(0);
