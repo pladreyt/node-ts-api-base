@@ -17,4 +17,8 @@ export class CreateTargetDTO {
   @IsString()
   @IsNotEmpty()
   location: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  topicId: string;
 }
