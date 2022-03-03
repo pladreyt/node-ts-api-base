@@ -24,13 +24,13 @@ describe('JWTService', () => {
       token = await jwtService.createJWT(user);
     });
     it('should return correct payload data when decoding token', async () => {
-      const idealTokenDecoded: AuthInterface.TokenPayloadData = {
+      const idealPayloadData: AuthInterface.TokenPayloadData = {
         email: user.email,
         userId: user.id,
         role: user.role
       };
       const decoded = await jwtService.decodeJWT(token);
-      expect(decoded['data']).toMatchObject(idealTokenDecoded);
+      expect(decoded['data']).toMatchObject(idealPayloadData);
     });
   });
 });
