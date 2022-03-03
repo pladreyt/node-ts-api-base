@@ -9,7 +9,7 @@ export class AuthorizationService {
   constructor(
     private readonly jwt: JWTService,
     private readonly redis: RedisService
-  ) { }
+  ) {}
   private static instance: AuthorizationService;
   public static getInstance(): AuthorizationService {
     if (!this.instance) {
@@ -19,7 +19,7 @@ export class AuthorizationService {
     return this.instance;
   }
 
-  async getUserFromToken( token: string ): Promise<ITokenPayload | undefined> {
+  async getUserFromToken(token: string): Promise<ITokenPayload | undefined> {
     try {
       if (!token) {
         return undefined;
@@ -51,13 +51,15 @@ export class AuthorizationService {
     _roles: string[]
   ): Promise<boolean> {
     const token = action.request.headers['authorization'];
-    const valid = await AuthorizationService.instance.getUserFromToken(token);
-    return !!valid;
+    const payload = await AuthorizationService.instance.getUserFromToken(token);
+    let valid = !!payload;
+    if (_roles.length > 0) {
+      valid = valid && _roles.includes(payload.data.role.name);
+    }
+    return valid;
   }
 
-  async currentUserChecker(
-    action: Action
-  ): Promise<ITokenPayload | undefined> {
+  async currentUserChecker(action: Action): Promise<ITokenPayload | undefined> {
     const token = action.request.headers['authorization'];
     const payload = await AuthorizationService.instance.getUserFromToken(token);
     return payload;

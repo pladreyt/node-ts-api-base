@@ -1,3 +1,5 @@
+import { Role } from '@entities/role.entity';
+
 export interface ISignInInput {
   email: string;
   password: string;
@@ -19,7 +21,8 @@ export interface ITokenPayload {
   exp: number;
 }
 
-type TokenPayloadData = {
+export type TokenPayloadData = {
   userId: number;
   email: string;
+  role: Role;
 };
