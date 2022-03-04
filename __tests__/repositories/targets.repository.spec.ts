@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, UpdateResult } from 'typeorm';
 import { mocked } from 'ts-jest/utils';
 import { Target } from '@entities/target.entity';
 import { TargetRepository } from '@repositories/targets.repository';
@@ -42,6 +42,24 @@ describe('TargetRepository', () => {
       const targetsFound = await targetRepository.showTargets();
       expect(targetsFound).toBeInstanceOf(Array);
       expect(targetsFound).toHaveLength(0);
+    });
+  });
+
+  describe('updateAwaitingCron', () => {
+    it('should update awaiting_cron when cron has executed', async ( ) => {
+      targetRepository.createQueryBuilder = mockQueryBuilder(
+        { executeResponse: new UpdateResult }
+      );
+      const updateResult = await targetRepository.updateAwaitingCron();
+      expect(updateResult).toBeInstanceOf(UpdateResult);
+    });
+
+    it('should return Error when fails at updating the targets', async ( ) => {
+      targetRepository.createQueryBuilder = mockQueryBuilder(
+        { executeResponse: new Error('Test error') }
+      );
+      await expect(targetRepository.updateAwaitingCron())
+        .rejects.toThrowError(Error);
     });
   });
 });

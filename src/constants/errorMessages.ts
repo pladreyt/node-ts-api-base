@@ -21,7 +21,9 @@ export enum ErrorsMessages {
   BAD_REQUEST_ERROR = 'Bad request error',
   NOT_FOUND_ERROR = 'Not found error',
   NOT_ACCEPTABLE_ERROR = 'Not acceptable error',
-  UNAUTHORIZED_ERROR = 'AuthorizationRequiredError'
+  UNAUTHORIZED_ERROR = 'AuthorizationRequiredError',
+  DATABASE_ERROR = 'Error in the database'
+
 }
 
 export enum UserErrorsMessages {
