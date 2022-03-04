@@ -1,7 +1,15 @@
-import { Column, Entity, Generated, Index, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  Index,
+  JoinColumn,
+  OneToMany,
+  OneToOne } from 'typeorm';
 import { Base } from './base.entity';
 import { Gender } from '@constants/users/attributes.constants';
 import { Target } from './target.entity';
+import { Role } from './role.entity';
 
 @Entity()
 export class User extends Base {
@@ -43,5 +51,12 @@ export class User extends Base {
   facebookID: string | null;
 
   @OneToMany(() => Target, target => target.user )
-    targets: Target[];
+  targets: Target[];
+
+  @OneToOne(() => Role )
+  @JoinColumn()
+  role: Role
+
+  @Column()
+  roleId: number;
 }

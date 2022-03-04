@@ -35,7 +35,15 @@ export class SessionService {
     let user: User;
     try {
       user = await User.createQueryBuilder('user')
-        .addSelect('user.password')
+        .innerJoinAndSelect('user.role', 'role')
+        .select([
+          'user.id',
+          'user.password',
+          'user.email',
+          'user.roleId',
+          'role.id',
+          'role.name'
+        ])
         .where({ email })
         .getOneOrFail();
     } catch (error) {
@@ -66,7 +74,6 @@ export class SessionService {
     const user = await this.userService.findOrCreateUserFacebook(userData);
     return this.userService.generateToken(user);
   }
-
 
   logOut(input: AuthInterface.ITokenToBlacklistInput): Promise<number> {
     const tokenAddedToBlacklist = this.redisService.addTokenToBlacklist(input);

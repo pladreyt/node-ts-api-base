@@ -10,7 +10,13 @@ export class JWTService {
     return new Promise((resolve, reject) => {
       try {
         const token = jwt.sign(
-          { data: { userId: user.id, email: user.email } },
+          {
+            data: {
+              userId: user.id,
+              email: user.email,
+              role: user.role
+            }
+          },
           JWT_SECRET || JWT_SECRET_DEFAULT,
           { expiresIn: ACCESS_TOKEN_LIFE || '6h' }
         );

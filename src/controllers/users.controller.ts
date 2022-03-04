@@ -19,22 +19,21 @@ import { SignUpDTO } from '@dto/signUpDTO';
 import { EntityMapper } from '@clients/mapper/entityMapper.service';
 import { RecoverPassDTO } from '@dto/recoverPassDTO';
 import { ResetPassDTO } from '@dto/resetPassDTO';
+import { RolesConstants } from '@constants/roles';
 
 @JsonController('/users')
 @Service()
 export class UserController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Authorized()
+  @Authorized([RolesConstants.Roles.ADMINISTRATOR])
   @Get()
   async index(): Promise<User[]> {
     return this.usersService.listUsers();
   }
 
   @Get('/verify')
-  async verify(
-    @QueryParam('key') key: string
-  ) {
+  async verify(@QueryParam('key') key: string) {
     return this.usersService.verifyUser(key);
   }
 
@@ -75,9 +74,7 @@ export class UserController {
   async recoverPassword(
     @Body({ validate: true }) recoverPassDTO: RecoverPassDTO
   ): Promise<boolean> {
-    return this.usersService.recoverPassword(
-      recoverPassDTO
-    );
+    return this.usersService.recoverPassword(recoverPassDTO);
   }
 
   @Post('/resetPassword')
